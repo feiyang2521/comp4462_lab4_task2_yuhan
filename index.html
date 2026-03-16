@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React应用 - 完整布局与散点图</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        /* 来自index.css */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* ========== App主容器样式 ========== */
+        /* 来自App.css */
+        .App {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* 头部样式 - 紫色 */
+        .header {
+            background-color: rgb(170, 130, 238);
+            color: white;
+            padding: 100px;
+            text-align: center;
+            font-size: 70px;
+            font-weight: bold;
+        }
+        
+        /* 主要内容区容器 - 横向排列 */
+        .main-content {
+            display: flex;
+            flex: 1;
+        }
+        
+        /* 左侧边栏 - 接近黑色 */
+        .left-sidebar {
+            display: flex;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 70px;
+            font-weight: bold;
+            align-items: center;
+            justify-content: center;
+            width: 1000px;
+        }
+        
+        /* 右侧边栏 - 浅灰色 */
+        .right-sidebar {
+            display: flex;
+            background-color: #f5f5f5;
+            padding: 20px;
+            width: 2000px;
+            text-align: center;
+            font-size: 70px;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* 中间区域容器 - 包含上层网格和下层细条 */
+        .center-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        /* 上层网格容器 - 水平排列左右区域 */
+        .main-grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+        
+        /* 左右内容区 - 白色网格 */
+        .left-section,
+        .right-section {
+            display: flex;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-height: 150px;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            font-weight: bold;
+        }
+        
+        /* 下层细条区域 - 比侧边栏更深的浅灰色 */
+        .bottom-strip {
+            background-color: #e0e0e0;
+            padding: 15px 20px;
+            text-align: center;
+            border-radius: 6px;
+            color: #333;
+            height: 1000px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 70px;
+            font-weight: bold;
+        }
+        
+        /* 底部样式 - 紫色 */
+        .footer {
+            background-color: rgb(170, 130, 238);
+            color: white;
+            padding: 200px;
+            font-size: 70px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        /* ========== 散点图样式 ========== */
+        /* 来自ScatterPlot.css */
+        .scatter-plot-container {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .scatter-plot-container h3 {
+            margin: 10px 0 10px 0;
+            color: #2c3e50;
+            font-size: 4rem;
+        }
+        
+        .stats {
+            font-size: 3rem;
+            color: #666;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 2rem;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .legend-label {
+            color: #333;
+        }
+        
+        .legend-count {
+            color: #666;
+            font-size: 3rem;
+        }
+        
+        .plot-wrapper {
+            display: flex;
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+            padding-left: 50px;
+        }
+        
+        .y-axis-label {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 3rem;
+            color: #666;
+            padding: 20px 5px;
+            text-align: center;
+            width: 20px;
+            position: absolute;
+            left: 0;
+            top: 0%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        
+        .plot-area {
+            position: relative;
+            flex: 1;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin: 0 0 30px 0;
+            overflow: hidden;
+        }
+        
+        /* 网格线样式 */
+        .grid-line {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.1);
+            opacity: 0.3;
+        }
+        
+        .grid-line.vertical {
+            width: 1px;
+            height: 100%;
+            top: 0;
+        }
+        
+        .grid-line.horizontal {
+            height: 1px;
+            width: 100%;
+            left: 0;
+        }
+        
+        /* 网格标签 */
+        .grid-label {
+            position: absolute;
+            font-size: 1rem;
+            color: #666;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        
+        .grid-label.bottom {
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 3px;
+        }
+        
+        .grid-label.left {
+            right: 100%;
+            bottom: 50%;
+            transform: translateY(50%);
+            margin-right: 3px;
+        }
+        
+        /* 坐标轴样式 */
+        .axis {
+            position: absolute;
+            background-color: #333;
+        }
+        
+        .x-axis {
+            width: 100%;
+            height: 1px;
+            bottom: 0;
+            left: 0;
+        }
+        
+        .y-axis {
+            width: 1px;
+            height: 100%;
+            left: 0;
+            bottom: 0;
+        }
+        
+        .axis-arrow {
+            position: absolute;
+            color: #333;
+            font-size: 0.8rem;
+        }
+        
+        .x-axis .axis-arrow.right {
+            right: -8px;
+            bottom: -4px;
+        }
+        
+        .y-axis .axis-arrow.top {
+            top: -8px;
+            left: -4px;
+        }
+        
+        /* 数据点样式 */
+        .point {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            transform: translate(-50%, 50%);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .point:hover {
+            transform: translate(-50%, 50%) scale(1.3);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .point-id {
+            font-size: 0.75rem;
+            color: white;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+            user-select: none;
+        }
+        
+        /* X轴标签 */
+        .x-axis-label {
+            text-align: center;
+            font-size: 3rem;
+            color: #666;
+            margin-top: 5px;
+            padding: 0 20px;
+        }
+        
+        /* ========== 阈值控制样式 ========== */
+        .threshold-control {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+            font-size: 3rem;
+        }
+        
+        .threshold-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 3rem;
+        }
+        
+        .threshold-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 3rem;
+        }
+        
+        .threshold-value {
+            font-weight: bold;
+            color: #3498db;
+            background-color: #e3f2fd;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 3rem;
+        }
+        
+        .slider-container {
+            margin: 15px 0;
+        }
+        
+        .threshold-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #e74c3c, #f1c40f, #2ecc71);
+            outline: none;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        
+        .threshold-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .threshold-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 2rem;
+            color: #666;
+        }
+        
+        .threshold-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #dee2e6;
+        }
+        
+        .highlight-count {
+            color: #2ecc71;
+            font-weight: 500;
+        }
+        
+        .dim-count {
+            color: #95a5a6;
+            font-weight: 500;
+        }
+        
+        /* 视觉提示 */
+        .visual-hint {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .hint-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .hint-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .highlight-dot {
+            background-color: #3498db;
+            opacity: 1;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .dim-dot {
+            background-color: #95a5a6;
+            opacity: 0.2;
+            border: 1px dashed #ccc;
+        }
+        
+        /* 点的新样式 */
+        .dim-point {
+            opacity: 0.2 !important;
+            filter: grayscale(50%);
+        }
+        
+        .highlight-point {
+            opacity: 1 !important;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        }
+        
+        .highlight-point:hover {
+            transform: translate(-50%, 50%) scale(1.4);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.5);
+        }
+        
+        /* 阈值线 */
+        .threshold-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #e74c3c;
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .threshold-line::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: repeating-linear-gradient(
+                to right,
+                transparent,
+                transparent 5px,
+                #e74c3c 5px,
+                #e74c3c 10px
+            );
+            transform: translateY(-50%);
+        }
+        
+        .threshold-label-line {
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        /* 布局调整 */
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        .right-section h2 {
+            font-size: 3rem;
+            margin: 0;
+        }
+        
+        .bottom-strip p {
+            font-size: 3rem;
+            margin: 0;
+        }
+        
+        /* 工具提示 */
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="App">
+        <header class="header">This is the header</header>
+        
+        <div class="main-content">
+            <aside class="left-sidebar">This is the left sidebar</aside>
+            
+            <div class="center-container">
+                <div class="main-grid-container">
+                    <div class="left-section">
+                        <div class="scatter-plot-container">
+                            <h3>交互式散点图</h3>
+                            
+                            <div class="stats">
+                                总数据点: 30 | 阈值: <span id="currentThreshold">50</span>
+                            </div>
+                            
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #e74c3c;"></div>
+                                    <span class="legend-label">Alpha类别</span>
+                                    <span class="legend-count" id="alphaCount">(10)</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #3498db;"></div>
+                                    <span class="legend-label">Beta类别</span>
+                                    <span class="legend-count" id="betaCount">(10)</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #2ecc71;"></div>
+                                    <span class="legend-label">Gamma类别</span>
+                                    <span class="legend-count" id="gammaCount">(10)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="visual-hint">
+                                <div class="hint-item">
+                                    <div class="hint-dot highlight-dot" style="background-color: #3498db;"></div>
+                                    <span>高于阈值 (正常显示)</span>
+                                </div>
+                                <div class="hint-item">
+                                    <div class="hint-dot dim-dot"></div>
+                                    <span>低于阈值 (淡化显示)</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 阈值控制面板 -->
+                            <div class="threshold-control">
+                                <div class="threshold-header">
+                                    <span class="threshold-label">Y轴阈值控制</span>
+                                    <span class="threshold-value" id="thresholdValueDisplay">50</span>
+                                </div>
+                                <div class="slider-container">
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="100" 
+                                        value="50" 
+                                        class="threshold-slider" 
+                                        id="thresholdSlider"
+                                        oninput="handleThresholdChange(this.value)">
+                                    <div class="slider-labels">
+                                        <span>0</span>
+                                        <span>25</span>
+                                        <span>50</span>
+                                        <span>75</span>
+                                        <span>100</span>
+                                    </div>
+                                </div>
+                                <div class="threshold-stats">
+                                    <span>高亮点: <span class="highlight-count" id="highlightCount">15</span></span>
+                                    <span>淡化点: <span class="dim-count" id="dimCount">15</span></span>
+                                </div>
+                            </div>
+                            
+                            <!-- 绘图区域 -->
+                            <div class="plot-wrapper">
+                                <div class="y-axis-label">Y 值</div>
+                                <div class="plot-area" id="plotArea">
+                                    <!-- 散点图将在这里动态生成 -->
+                                </div>
+                            </div>
+                            <div class="x-axis-label">X 值</div>
+                        </div>
+                    </div>
+                    
+                    <div class="right-section">
+                        <h2>This is the right section</h2>
+                    </div>
+                </div>
+                
+                <div class="bottom-strip">
+                    <p>This is the bottom strip</p>
+                </div>
+            </div>
+            
+            <aside class="right-sidebar">This is the right sidebar</aside>
+        </div>
+        
+        <footer class="footer">This is the footer</footer>
+    </div>
+    
+    <!-- 工具提示容器 -->
+    <div class="tooltip" id="globalTooltip"></div>
+    
+    <script>
+        // 原始数据
+        const scatterData = [
+            { id: 1, x: 12, y: 85, category: "Alpha" },
+            { id: 2, x: 45, y: 22, category: "Beta" },
+            { id: 3, x: 67, y: 90, category: "Alpha" },
+            { id: 4, x: 89, y: 45, category: "Gamma" },
+            { id: 5, x: 23, y: 12, category: "Beta" },
+            { id: 6, x: 56, y: 67, category: "Alpha" },
+            { id: 7, x: 91, y: 34, category: "Gamma" },
+            { id: 8, x: 15, y: 78, category: "Beta" },
+            { id: 9, x: 34, y: 56, category: "Alpha" },
+            { id: 10, x: 72, y: 88, category: "Gamma" },
+            { id: 11, x: 8, y: 95, category: "Alpha" },
+            { id: 12, x: 50, y: 50, category: "Beta" },
+            { id: 13, x: 29, y: 41, category: "Gamma" },
+            { id: 14, x: 81, y: 19, category: "Alpha" },
+            { id: 15, x: 63, y: 72, category: "Beta" },
+            { id: 16, x: 95, y: 60, category: "Gamma" },
+            { id: 17, x: 41, y: 33, category: "Alpha" },
+            { id: 18, x: 19, y: 82, category: "Beta" },
+            { id: 19, x: 76, y: 25, category: "Gamma" },
+            { id: 20, x: 38, y: 66, category: "Alpha" },
+            { id: 21, x: 5, y: 15, category: "Beta" },
+            { id: 22, x: 88, y: 92, category: "Gamma" },
+            { id: 23, x: 60, y: 48, category: "Alpha" },
+            { id: 24, x: 25, y: 75, category: "Beta" },
+            { id: 25, x: 48, y: 10, category: "Gamma" },
+            { id: 26, x: 98, y: 55, category: "Alpha" },
+            { id: 27, x: 31, y: 89, category: "Beta" },
+            { id: 28, x: 69, y: 38, category: "Gamma" },
+            { id: 29, x: 14, y: 28, category: "Alpha" },
+            { id: 30, x: 53, y: 80, category: "Beta" }
+        ];
+        
+        // 配置
+        const config = {
+            categoryColors: {
+                "Alpha": "#e74c3c",
+                "Beta": "#3498db",
+                "Gamma": "#2ecc71"
+            },
+            currentThreshold: 50,
+            plotPadding: 40,
+            gridLines: 10
+        };
+        
+        // 初始化
+        function initApplication() {
+            calculateCategoryCounts();
+            initScatterPlot();
+            updateAllStats();
+        }
+        
+        // 计算各类别数量
+        function calculateCategoryCounts() {
+            const counts = { Alpha: 0, Beta: 0, Gamma: 0 };
+            scatterData.forEach(point => {
+                counts[point.category]++;
+            });
+            
+            document.getElementById('alphaCount').textContent = `(${counts.Alpha})`;
+            document.getElementById('betaCount').textContent = `(${counts.Beta})`;
+            document.getElementById('gammaCount').textContent = `(${counts.Gamma})`;
+        }
+        
+        // 初始化散点图
+        function initScatterPlot() {
+            const plotArea = document.getElementById('plotArea');
+            if (!plotArea) return;
+            
+            plotArea.innerHTML = '';
+            
+            // 添加网格
+            addGridLines(plotArea);
+            
+            // 添加坐标轴
+            addAxes(plotArea);
+            
+            // 添加阈值线
+            addThresholdLine(plotArea, config.currentThreshold);
+            
+            // 添加数据点
+            addDataPoints(plotArea);
+            
+            // 添加窗口调整监听
+            window.addEventListener('resize', function() {
+                setTimeout(() => {
+                    plotArea.innerHTML = '';
+                    addGridLines(plotArea);
+                    addAxes(plotArea);
+                    addThresholdLine(plotArea, config.currentThreshold);
+                    addDataPoints(plotArea);
+                }, 100);
+            });
+        }
+        
+        // 添加网格线
+        function addGridLines(container) {
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            const cellWidth = width / config.gridLines;
+            const cellHeight = height / config.gridLines;
+            
+            // 垂直线
+            for (let i = 1; i < config.gridLines; i++) {
+                const x = i * cellWidth;
+                const line = document.createElement('div');
+                line.className = 'grid-line vertical';
+                line.style.left = `${x}px`;
+                container.appendChild(line);
+                
+                const label = document.createElement('div');
+                label.className = 'grid-label bottom';
+                label.textContent = `${i * 10}`;
+                label.style.left = `${x}px`;
+                container.appendChild(label);
+            }
+            
+            // 水平线
+            for (let i = 1; i < config.gridLines; i++) {
+                const y = i * cellHeight;
+                const line = document.createElement('div');
+                line.className = 'grid-line horizontal';
+                line.style.top = `${y}px`;
+                container.appendChild(line);
+                
+                const label = document.createElement('div');
+                label.className = 'grid-label left';
+                label.textContent = `${100 - i * 10}`;
+                label.style.top = `${y}px`;
+                container.appendChild(label);
+            }
+        }
+        
+        // 添加坐标轴
+        function addAxes(container) {
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            
+            // X轴
+            const xAxis = document.createElement('div');
+            xAxis.className = 'axis x-axis';
+            container.appendChild(xAxis);
+            
+            const xArrow = document.createElement('div');
+            xArrow.className = 'axis-arrow right';
+            xArrow.innerHTML = '→';
+            xAxis.appendChild(xArrow);
+            
+            // Y轴
+            const yAxis = document.createElement('div');
+            yAxis.className = 'axis y-axis';
+            container.appendChild(yAxis);
+            
+            const yArrow = document.createElement('div');
+            yArrow.className = 'axis-arrow top';
+            yArrow.innerHTML = '↑';
+            yAxis.appendChild(yArrow);
+        }
+        
+        // 添加阈值线
+        function addThresholdLine(container, threshold) {
+            const existingLine = container.querySelector('.threshold-line');
+            if (existingLine) existingLine.remove();
+            
+            const height = container.offsetHeight;
+            const yPosition = height - (threshold / 100) * height;
+            
+            const line = document.createElement('div');
+            line.className = 'threshold-line';
+            line.style.top = `${yPosition}px`;
+            line.id = 'thresholdLine';
+            
+            const label = document.createElement('div');
+            label.className = 'threshold-label-line';
+            label.textContent = threshold;
+            label.id = 'thresholdLineLabel';
+            
+            line.appendChild(label);
+            container.appendChild(line);
+        }
+        
+        // 添加数据点
+        function addDataPoints(container) {
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+            const plotWidth = width - config.plotPadding * 2;
+            const plotHeight = height - config.plotPadding * 2;
+            
+            scatterData.forEach(point => {
+                const x = config.plotPadding + (point.x / 100) * plotWidth;
+                const y = config.plotPadding + (1 - point.y / 100) * plotHeight;
+                
+                const pointEl = document.createElement('div');
+                pointEl.className = 'point';
+                pointEl.style.left = `${x}px`;
+                pointEl.style.top = `${y}px`;
+                pointEl.style.backgroundColor = config.categoryColors[point.category];
+                pointEl.style.borderColor = darkenColor(config.categoryColors[point.category], 20);
+                pointEl.dataset.id = point.id;
+                pointEl.dataset.category = point.category;
+                pointEl.dataset.x = point.x;
+                pointEl.dataset.y = point.y;
+                
+                // 根据阈值设置样式
+                if (point.y >= config.currentThreshold) {
+                    pointEl.classList.add('highlight-point');
+                } else {
+                    pointEl.classList.add('dim-point');
+                }
+                
+                // 添加点编号
+                const pointId = document.createElement('div');
+                pointId.className = 'point-id';
+                pointId.textContent = point.id;
+                pointEl.appendChild(pointId);
+                
+                // 鼠标事件
+                pointEl.addEventListener('mouseenter', handlePointMouseEnter);
+                pointEl.addEventListener('mouseleave', handlePointMouseLeave);
+                pointEl.addEventListener('click', handlePointClick);
+                
+                container.appendChild(pointEl);
+            });
+        }
+        
+        // 阈值变化处理
+        function handleThresholdChange(value) {
+            config.currentThreshold = parseInt(value);
+            
+            // 更新显示
+            document.getElementById('thresholdValueDisplay').textContent = value;
+            document.getElementById('currentThreshold').textContent = value;
+            
+            // 更新阈值线
+            const plotArea = document.getElementById('plotArea');
+            if (plotArea) {
+                addThresholdLine(plotArea, config.currentThreshold);
+            }
+            
+            // 更新点样式
+            const points = document.querySelectorAll('.point');
+            points.forEach(point => {
+                const y = parseInt(point.dataset.y);
+                if (y >= config.currentThreshold) {
+                    point.classList.add('highlight-point');
+                    point.classList.remove('dim-point');
+                } else {
+                    point.classList.add('dim-point');
+                    point.classList.remove('highlight-point');
+                }
+            });
+            
+            // 更新统计
+            updateAllStats();
+        }
+        
+        // 更新所有统计
+        function updateAllStats() {
+            const highlightCount = scatterData.filter(p => p.y >= config.currentThreshold).length;
+            const dimCount = scatterData.length - highlightCount;
+            
+            document.getElementById('highlightCount').textContent = highlightCount;
+            document.getElementById('dimCount').textContent = dimCount;
+        }
+        
+        // 鼠标进入点
+        function handlePointMouseEnter(event) {
+            const point = event.currentTarget;
+            const id = point.dataset.id;
+            const category = point.dataset.category;
+            const x = point.dataset.x;
+            const y = point.dataset.y;
+            
+            const tooltip = document.getElementById('globalTooltip');
+            tooltip.innerHTML = `
+                <strong>点 #${id}</strong><br>
+                类别: ${category}<br>
+                坐标: (${x}, ${y})<br>
+                状态: ${y >= config.currentThreshold ? '正常显示' : '已淡化'}
+            `;
+            tooltip.style.left = `${event.pageX + 10}px`;
+            tooltip.style.top = `${event.pageY - 10}px`;
+            tooltip.style.opacity = '1';
+        }
+        
+        // 鼠标离开点
+        function handlePointMouseLeave() {
+            const tooltip = document.getElementById('globalTooltip');
+            tooltip.style.opacity = '0';
+        }
+        
+        // 点击点
+        function handlePointClick(event) {
+            const point = event.currentTarget;
+            const id = point.dataset.id;
+            const category = point.dataset.category;
+            const x = point.dataset.x;
+            const y = point.dataset.y;
+            
+            const message = `
+                点 #${id}
+                类别: ${category}
+                坐标: (${x}, ${y})
+                当前阈值: ${config.currentThreshold}
+                状态: ${y >= config.currentThreshold ? '正常显示' : '已淡化'}
+            `;
+            
+            alert(message);
+        }
+        
+        // 颜色变暗函数
+        function darkenColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, (num >> 16) - amt);
+            const G = Math.max(0, (num >> 8 & 0x00FF) - amt);
+            const B = Math.max(0, (num & 0x0000FF) - amt);
+            
+            return "#" + (
+                0x1000000 +
+                (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255)
+            ).toString(16).slice(1);
+        }
+        
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initApplication, 100);
+        });
+    </script>
+</body>
+</html>
